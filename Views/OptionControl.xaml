@@ -1,0 +1,97 @@
+﻿<UserControl x:Class="OpenCC.NET.GUI.Views.OptionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             xmlns:viewModels="clr-namespace:OpenCC.NET.GUI.ViewModels"
+             xmlns:converters="clr-namespace:OpenCC.NET.GUI.Converters">
+    <UserControl.DataContext>
+        <viewModels:OptionViewModel />
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <converters:CharacterTypeToIntConverter x:Key="CharacterTypeToIntConverter" />
+        <converters:VariantTypeToIntConverter x:Key="VariantTypeToIntConverter" />
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </UserControl.Resources>
+    <Grid>
+        <GroupBox
+            Header="选项"
+            IsEnabled="{Binding IsProcessing,Converter={StaticResource InverseBoolConverter},Mode=OneWay}">
+            <ui:SimpleStackPanel>
+                <ui:RadioButtons
+                    Focusable="False"
+                    x:Name="RadOrigin"
+                    Header="原文:"
+                    MaxColumns="2"
+                    Margin="5"
+                    SelectedIndex="{Binding OriginalCharacter,Converter={StaticResource CharacterTypeToIntConverter}}">
+                    <RadioButton
+                        x:Name="RadOriginSimplified"
+                        Content="简体"
+                        IsChecked="True" />
+                    <RadioButton
+                        x:Name="RadOriginTraditional"
+                        Content="繁体" />
+                </ui:RadioButtons>
+                <ui:RadioButtons
+                    x:Name="RadTarget"
+                    Header="目标:"
+                    MaxColumns="2"
+                    Margin="5"
+                    SelectedIndex="{Binding TargetCharacter,Converter={StaticResource CharacterTypeToIntConverter}}">
+                    <RadioButton
+                        x:Name="RadTargetSimplified"
+                        IsEnabled="{Binding IsRadTargetSimplifiedEnabled}"
+                        Content="简体" />
+                    <RadioButton
+                        x:Name="RadTargetTraditional"
+                        Content="繁体"
+                        IsChecked="True" />
+                </ui:RadioButtons>
+                <ui:RadioButtons
+                    x:Name="RadVariant"
+                    Header="异体字:"
+                    MaxColumns="3"
+                    Margin="5"
+                    Visibility="{Binding RadVariantVisibility}"
+                    SelectedIndex="{Binding TargetVariant,Converter={StaticResource VariantTypeToIntConverter}}">
+                    <RadioButton
+                        x:Name="RadVariantOpenCC"
+                        Content="OpenCC标准"/>
+                    <RadioButton
+                        x:Name="RadVariantTW"
+                        Content="台湾标准" 
+                        IsChecked="True" />
+                    <RadioButton
+                        x:Name="RadVariantHK"
+                        Content="香港标准" />
+                    <RadioButton
+                        x:Name="RadVariantCN"
+                        Content="中国大陆标准" />
+                </ui:RadioButtons>
+                <ui:ToggleSwitch
+                    x:Name="SwIdiom"
+                    Header="地域用词转换:"
+                    ToolTip="地域用词转换不能保证正确，请谨慎使用"
+                    Margin="5"
+                    Visibility="{Binding SwIdiomVisibility}"
+                    IsOn="{Binding IsIdiomConvert}"
+                    OnContent="{Binding IdiomName}"
+                    OffContent="不转换" />
+                <ui:ProgressBar
+                    IsIndeterminate="{Binding IsProcessing}"
+                    Visibility="{Binding IsProcessing,Converter={StaticResource BoolToVisibilityConverter}}"
+                    VerticalAlignment="Center"
+                    Margin="20" />
+                <Button
+                    Content="转换"
+                    Margin="5"
+                    Command="{Binding ConvertCommand}" />
+            </ui:SimpleStackPanel>
+        </GroupBox>
+    </Grid>
+</UserControl>
