@@ -9,7 +9,7 @@ OpenCC.NET GUI是基于OpenCC(Open Chinese Convert, 开放中文转换)，使用
 ### 特点
 
 - 支持简=>繁，繁=>简，繁=>繁的转换模式
-- 支持包括OpenCC，中国大陆，台湾，香港四种异体字标准
+- 支持包括OpenCC，台湾，香港三种异体字标准
 - 支持中国大陆和台湾地区的常用词汇转换
 - 支持txt文本文件的批量转换
 
@@ -17,7 +17,7 @@ OpenCC.NET GUI是基于OpenCC(Open Chinese Convert, 开放中文转换)，使用
 
 ### 获取
 
-可以直接在仓库页面右侧获取最新Release版本，或下载源码后自行编译。若无法运行，请确保安装了[.NET Core 3.1运行时](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-desktop-3.1.21-windows-x64-installer)。
+可以直接在仓库页面右侧获取最新Release版本，或下载源码后自行编译。若无法运行，请确保安装了[.NET 6运行时](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-6.0.4-windows-x64-installer)。
 
 ### 使用
 
@@ -31,7 +31,7 @@ OpenCC.NET GUI是基于OpenCC(Open Chinese Convert, 开放中文转换)，使用
 
 #### 文件批量转换
 
-此模式下可以批量导入txt文本文件进行转换。若生成文件为乱码，请确保原文件为UTF-8编码。
+此模式下可以批量导入txt格式的文本文件和docx格式的Word文档进行转换。若生成文件为乱码，请确保原文件为UTF-8编码。
 
 ![](screenshot-2.png)
 

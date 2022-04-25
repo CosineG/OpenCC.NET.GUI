@@ -69,9 +69,6 @@
                     <RadioButton
                         x:Name="RadVariantHK"
                         Content="香港标准" />
-                    <RadioButton
-                        x:Name="RadVariantCN"
-                        Content="中国大陆标准" />
                 </ui:RadioButtons>
                 <ui:ToggleSwitch
                     x:Name="SwIdiom"

@@ -91,7 +91,7 @@ namespace OpenCC.NET.GUI.ViewModels
         public void AddFile()
         {
             // 选择原文件
-            var openFileDialog = new OpenFileDialog {Filter = "文本文件(*.txt)|*.txt", Multiselect = true};
+            var openFileDialog = new OpenFileDialog {Filter = "纯文本 (*.txt)|*.txt;|Word 文档 (*.docx)|*.docx", Multiselect = true};
             if (openFileDialog.ShowDialog() == false) return;
             var dialogFilePaths = openFileDialog.FileNames;
 

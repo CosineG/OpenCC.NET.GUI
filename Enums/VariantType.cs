@@ -7,7 +7,6 @@
     {
         OpenCC,
         TW,
-        HK,
-        CN
+        HK
     }
 }

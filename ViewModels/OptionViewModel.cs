@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices.ComTypes;
+using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using OpenCC.NET.GUI.Enums;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using OpenCCNET;
 
 namespace OpenCC.NET.GUI.ViewModels
@@ -221,7 +222,6 @@ namespace OpenCC.NET.GUI.ViewModels
                     VariantType.OpenCC => text.ToHantFromHans(),
                     VariantType.TW => text.ToTWFromHans(IsIdiomConvert),
                     VariantType.HK => text.ToHKFromHans(),
-                    VariantType.CN => text.ToCNFromHans(),
                     _ => result
                 };
             }
@@ -238,7 +238,6 @@ namespace OpenCC.NET.GUI.ViewModels
                         VariantType.OpenCC => text.ToHantFromTW(),
                         VariantType.TW => text.ToTWFromHant(IsIdiomConvert),
                         VariantType.HK => text.ToHKFromHant(),
-                        VariantType.CN => text.ToCNFromHant(),
                         _ => result
                     };
                 }
@@ -255,44 +254,44 @@ namespace OpenCC.NET.GUI.ViewModels
         public async Task ConvertFileAsync(ICollection<File> files)
         {
             IsProcessing = true;
-            var task = Task.Run(() =>
+            var tasks = files.Select(async file =>
             {
-                foreach (var file in files)
+                if (file.Status == FileStatus.Success)
                 {
-                    if (file.Status == FileStatus.Success)
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        // 指定输入输出路径
-                        var filePath = file.Path;
-                        var suffix = GetProcessSuffix();
-                        var outputPath = Path.Combine(file.OutputFolder,
-                            Path.GetFileNameWithoutExtension(filePath) + suffix + Path.GetExtension(filePath));
-                        using var reader = new StreamReader(filePath);
-                        using var writer = new StreamWriter(outputPath) {AutoFlush = true};
-
-                        // 转换
-                        Messenger.Send(file, "FileStatusRunning");
-                        string originalLine;
-                        while ((originalLine = reader.ReadLine()) != null)
-                        {
-                            var convertedLine = ConvertText(originalLine);
-                            writer.WriteLine(convertedLine);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        Messenger.Send(file, "FileStatusFail");
-                        continue;
-                    }
-
-                    Messenger.Send(file, "FileStatusSuccess");
+                    return;
                 }
+
+                try
+                {
+                    // 指定输入输出路径
+                    var filePath = file.Path;
+                    var suffix = GetProcessSuffix();
+                    var extension = Path.GetExtension(filePath);
+                    var outputPath = Path.Combine(file.OutputFolder,
+                        Path.GetFileNameWithoutExtension(filePath) + suffix + extension);
+
+                    Messenger.Send(file, "FileStatusRunning");
+                    
+                    // 转换
+                    switch (extension)
+                    {
+                        case ".txt":
+                            await ConvertTextFileAsync(filePath, outputPath);
+                            break;
+                        case ".docx":
+                            await ConvertDocxFileAsync(filePath, outputPath);
+                            break;
+                    }
+                }
+                catch (Exception)
+                {
+                    Messenger.Send(file, "FileStatusFail");
+                    return;
+                }
+
+                Messenger.Send(file, "FileStatusSuccess");
             });
-            await Task.WhenAll(task);
+            await Task.WhenAll(tasks);
             IsProcessing = false;
         }
 
@@ -310,6 +309,8 @@ namespace OpenCC.NET.GUI.ViewModels
                 case CharacterType.Traditional:
                     suffix.Append("_繁");
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             switch (TargetVariant)
@@ -323,9 +324,8 @@ namespace OpenCC.NET.GUI.ViewModels
                 case VariantType.HK:
                     suffix.Append("_港");
                     break;
-                case VariantType.CN:
-                    suffix.Append("_陆");
-                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             if (IsIdiomConvert)
@@ -334,6 +334,68 @@ namespace OpenCC.NET.GUI.ViewModels
             }
 
             return suffix.ToString();
+        }
+
+        /// <summary>
+        /// 转换txt格式的文本文件
+        /// </summary>
+        /// <param name="filePath">输入文件路径</param>
+        /// <param name="outputPath">输出文件路径</param>
+        /// <returns></returns>
+        private async Task ConvertTextFileAsync(string filePath, string outputPath)
+        {
+            using var reader = new StreamReader(filePath);
+            await using var writer = new StreamWriter(outputPath);
+
+            var lines = new List<string>();
+            string originalLine;
+            while ((originalLine = await reader.ReadLineAsync()) != null)
+            {
+                lines.Add(originalLine);
+            }
+
+            var childTasks = Enumerable.Range(0, lines.Count).Select(async i =>
+            {
+                await Task.Run(() => lines[i] = ConvertText(lines[i]));
+            });
+
+            await Task.WhenAll(childTasks);
+
+            foreach (var line in lines)
+            {
+                await writer.WriteLineAsync(line);
+            }
+        }
+
+        /// <summary>
+        /// 转换docx格式的Word文档
+        /// </summary>
+        /// <param name="filePath">输入文件路径</param>
+        /// <param name="outputPath">输出文件路径</param>
+        /// <returns></returns>
+        private async Task ConvertDocxFileAsync(string filePath, string outputPath)
+        {
+            System.IO.File.Copy(filePath, outputPath);
+            try
+            {
+                using var docx = WordprocessingDocument.Open(outputPath, true);
+                if (docx.MainDocumentPart != null)
+                {
+                    var document = docx.MainDocumentPart.Document;
+
+                    var tasks = document.Descendants<Text>().Select(async text =>
+                    {
+                        await Task.Run(() => text.Text = ConvertText(text.Text));
+                    });
+
+                    await Task.WhenAll(tasks);
+                }
+            }
+            catch (Exception)
+            {
+                System.IO.File.Delete(outputPath);
+                throw;
+            }
         }
     }
 }

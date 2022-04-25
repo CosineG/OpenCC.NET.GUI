@@ -45,7 +45,7 @@ namespace OpenCC.NET.GUI.Views
         {
             try
             {
-                ZhUtil.Initialize();
+                ZhConverter.Initialize();
             }
             catch (Exception)
             {
