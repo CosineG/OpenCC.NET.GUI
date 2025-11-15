@@ -45,7 +45,7 @@ namespace OpenCC.NET.GUI.Views
         {
             try
             {
-                ZhConverter.Initialize();
+                ZhConverter.Initialize(segmentMode: SegmentMode.MaxMatch);
             }
             catch (Exception)
             {

@@ -9,14 +9,19 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using OpenCC.NET.GUI.Enums;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Presentation;
+using Drawing = DocumentFormat.OpenXml.Drawing;
 using OpenCCNET;
 
 namespace OpenCC.NET.GUI.ViewModels
 {
     public class OptionViewModel : ObservableRecipient
     {
+        private SegmentationMode _segmentationMode;
         private CharacterType _originalCharacter;
         private CharacterType _targetCharacter;
         private VariantType _targetVariant;
@@ -33,6 +38,7 @@ namespace OpenCC.NET.GUI.ViewModels
         {
             ConvertCommand = new RelayCommand(RequestData);
             IsActive = true;
+            SegmentationMode = SegmentationMode.MaxMatch;
         }
 
         protected override void OnActivated()
@@ -45,6 +51,30 @@ namespace OpenCC.NET.GUI.ViewModels
             // 接收文件列表进行转换
             Messenger.Register<OptionViewModel, ICollection<File>, string>(this, "FileList",
                 async (_, m) => await ConvertFileAsync(m));
+        }
+
+        /// <summary>
+        /// 分词方式
+        /// </summary>
+        public SegmentationMode SegmentationMode
+        {
+            get => _segmentationMode;
+            set
+            {
+                if (!SetProperty(ref _segmentationMode, value)) return;
+                switch (value)
+                {
+                    case SegmentationMode.Jieba:
+                        ZhConverter.ZhSegment.SetMode(SegmentMode.Jieba);
+                        break;
+                    case SegmentationMode.MaxMatch:
+                        ZhConverter.ZhSegment.SetMode(SegmentMode.MaxMatch);
+                        break;
+                    default:
+                        ZhConverter.ZhSegment.SetMode(SegmentMode.MaxMatch);
+                        break;
+                }
+            }
         }
 
         /// <summary>
@@ -273,13 +303,23 @@ namespace OpenCC.NET.GUI.ViewModels
                     Messenger.Send(file, "FileStatusRunning");
                     
                     // 转换
-                    switch (extension)
+                    switch (extension.ToLower())
                     {
-                        case ".txt":
-                            await ConvertTextFileAsync(filePath, outputPath);
-                            break;
+                        case ".pdf":
+                            MessageBox.Show("暂不支持PDF格式文件的转换。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Messenger.Send(file, "FileStatusFail");
+                            return;
                         case ".docx":
                             await ConvertDocxFileAsync(filePath, outputPath);
+                            break;
+                        case ".xlsx":
+                            await ConvertXlsxFileAsync(filePath, outputPath);
+                            break;
+                        case ".pptx":
+                            await ConvertPptxFileAsync(filePath, outputPath);
+                            break;
+                        default:
+                            await ConvertTextFileAsync(filePath, outputPath);
                             break;
                     }
                 }
@@ -383,13 +423,140 @@ namespace OpenCC.NET.GUI.ViewModels
                 {
                     var document = docx.MainDocumentPart.Document;
 
-                    var tasks = document.Descendants<Text>().Select(async text =>
+                    var tasks = document.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>().Select(async text =>
                     {
                         await Task.Run(() => text.Text = ConvertText(text.Text));
                     });
 
                     await Task.WhenAll(tasks);
                 }
+            }
+            catch (Exception)
+            {
+                System.IO.File.Delete(outputPath);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 转换xlsx格式的Excel文档
+        /// </summary>
+        /// <param name="filePath">输入文件路径</param>
+        /// <param name="outputPath">输出文件路径</param>
+        /// <returns></returns>
+        private async Task ConvertXlsxFileAsync(string filePath, string outputPath)
+        {
+            System.IO.File.Copy(filePath, outputPath);
+            try
+            {
+                using var spreadsheetDocument = SpreadsheetDocument.Open(outputPath, true);
+                var workbookPart = spreadsheetDocument.WorkbookPart;
+                if (workbookPart == null) return;
+
+                var sharedStringTablePart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+                SharedStringTable sharedStringTable = null;
+                if (sharedStringTablePart != null)
+                {
+                    sharedStringTable = sharedStringTablePart.SharedStringTable;
+                }
+
+                foreach (var worksheetPart in workbookPart.WorksheetParts)
+                {
+                    var sheetData = worksheetPart.Worksheet.Elements<SheetData>().FirstOrDefault();
+                    if (sheetData == null) continue;
+
+                    var tasks = sheetData.Elements<Row>().SelectMany(row => row.Elements<Cell>()).Select(async cell =>
+                    {
+                        if (cell.CellValue != null)
+                        {
+                            string originalText = null;
+
+                            if (cell.DataType is { Value: CellValues.SharedString })
+                            {
+                                if (sharedStringTable != null && int.TryParse(cell.CellValue.Text, out var ssid))
+                                {
+                                    originalText = sharedStringTable.ElementAt(ssid).InnerText;
+                                }
+                            }
+                            else
+                            {
+                                originalText = cell.CellValue.Text;
+                            }
+
+                            if (!string.IsNullOrEmpty(originalText))
+                            {
+                                await Task.Run(() =>
+                                {
+                                    var convertedText = ConvertText(originalText);
+                                    
+                                    if (cell.DataType is { Value: CellValues.SharedString })
+                                    {
+                                        cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                                        cell.CellValue.Text = convertedText;
+                                    }
+                                    else
+                                    {
+                                        cell.CellValue.Text = convertedText;
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+                    await Task.WhenAll(tasks);
+                    worksheetPart.Worksheet.Save();
+                }
+                workbookPart.Workbook.Save();
+            }
+            catch (Exception)
+            {
+                System.IO.File.Delete(outputPath);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 转换pptx格式的PowerPoint文档
+        /// </summary>
+        /// <param name="filePath">输入文件路径</param>
+        /// <param name="outputPath">输出文件路径</param>
+        /// <returns></returns>
+        private async Task ConvertPptxFileAsync(string filePath, string outputPath)
+        {
+            System.IO.File.Copy(filePath, outputPath);
+            try
+            {
+                using var presentationDocument = PresentationDocument.Open(outputPath, true);
+                var presentationPart = presentationDocument.PresentationPart;
+                if (presentationPart == null) return;
+
+                var tasks = new List<Task>();
+
+                foreach (var slidePart in presentationPart.SlideParts)
+                {
+                    tasks.AddRange(slidePart.Slide.Descendants<Drawing.Text>().Select(async text =>
+                    {
+                        await Task.Run(() => text.Text = ConvertText(text.Text));
+                    }));
+                }
+
+                foreach (var slideLayoutPart in presentationPart.GetPartsOfType<SlideLayoutPart>())
+                {
+                    tasks.AddRange(slideLayoutPart.SlideLayout.Descendants<Drawing.Text>().Select(async text =>
+                    {
+                        await Task.Run(() => text.Text = ConvertText(text.Text));
+                    }));
+                }
+
+                foreach (var slideMasterPart in presentationPart.SlideMasterParts)
+                {
+                    tasks.AddRange(slideMasterPart.SlideMaster.Descendants<Drawing.Text>().Select(async text =>
+                    {
+                        await Task.Run(() => text.Text = ConvertText(text.Text));
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception)
             {
