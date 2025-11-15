@@ -14,6 +14,7 @@
     <UserControl.Resources>
         <converters:CharacterTypeToIntConverter x:Key="CharacterTypeToIntConverter" />
         <converters:VariantTypeToIntConverter x:Key="VariantTypeToIntConverter" />
+        <converters:SegmentationModeToIntConverter x:Key="SegmentationModeToIntConverter" />
         <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
@@ -22,6 +23,18 @@
             Header="选项"
             IsEnabled="{Binding IsProcessing,Converter={StaticResource InverseBoolConverter},Mode=OneWay}">
             <ui:SimpleStackPanel>
+                <ui:RadioButtons
+                    Focusable="False"
+                    Header="分词方式:"
+                    MaxColumns="2"
+                    Margin="5"
+                    SelectedIndex="{Binding SegmentationMode,Converter={StaticResource SegmentationModeToIntConverter}}">
+                    <RadioButton
+                        Content="最大匹配"
+                        IsChecked="True" />
+                    <RadioButton
+                        Content="结巴分词" />
+                </ui:RadioButtons>
                 <ui:RadioButtons
                     Focusable="False"
                     x:Name="RadOrigin"
@@ -85,7 +98,8 @@
                     VerticalAlignment="Center"
                     Margin="20" />
                 <Button
-                    Content="转换"
+                    FontSize="16"
+                    Content="  转换  "
                     Margin="5"
                     Command="{Binding ConvertCommand}" />
             </ui:SimpleStackPanel>

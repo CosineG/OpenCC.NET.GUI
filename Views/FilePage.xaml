@@ -21,12 +21,30 @@
             Header="文件列表">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="输出目录：" VerticalAlignment="Center" />
+                    <TextBox Grid.Column="1" Text="{Binding OutputFolder}" IsReadOnly="True" Margin="5,0" />
+                    <Button Grid.Column="2" Command="{Binding SelectOutputFolderCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:FontIcon Glyph="&#xE8DE;" Margin="0,0,5,0" />
+                            <TextBlock Text="选择目录"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
                 <DataGrid
                     x:Name="DgFile"
-                    Grid.Row="0"
+                    Grid.Row="1"
                     AutoGenerateColumns="False"
                     IsReadOnly="True"
                     HeadersVisibility="Column"
@@ -90,7 +108,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <ui:SimpleStackPanel
-                    Grid.Row="1"
+                    Grid.Row="2"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
                     <Button

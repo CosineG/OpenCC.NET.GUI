@@ -50,15 +50,25 @@ namespace OpenCC.NET.GUI.ViewModels
     public class FileViewModel : ObservableRecipient
     {
         private ObservableCollection<File> _files = new ObservableCollection<File>();
+        private string _outputFolder;
+
+        public string OutputFolder
+        {
+            get => _outputFolder;
+            set => SetProperty(ref _outputFolder, value);
+        }
+        
         public ICommand AddFileCommand { get; }
         public ICommand RemoveFileCommand { get; }
         public ICommand ClearFileCommand { get; }
+        public ICommand SelectOutputFolderCommand { get; }
 
         public FileViewModel()
         {
             AddFileCommand = new RelayCommand(AddFile);
             RemoveFileCommand = new RelayCommand<IList>(RemoveFile);
             ClearFileCommand = new RelayCommand<string>(ClearFile);
+            SelectOutputFolderCommand = new RelayCommand(SelectOutputFolder);
             IsActive = true;
         }
 
@@ -88,29 +98,42 @@ namespace OpenCC.NET.GUI.ViewModels
             set => SetProperty(ref _files, value);
         }
 
-        public void AddFile()
+        public void SelectOutputFolder()
         {
-            // 选择原文件
-            var openFileDialog = new OpenFileDialog {Filter = "纯文本 (*.txt)|*.txt;|Word 文档 (*.docx)|*.docx", Multiselect = true};
-            if (openFileDialog.ShowDialog() == false) return;
-            var dialogFilePaths = openFileDialog.FileNames;
-
-            // 选择输出目录
             var folderBrowserDialog = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog
             {
                 Description = "请选择输出位置",
                 UseDescriptionForTitle = true,
                 ShowNewFolderButton = true
             };
-            if (folderBrowserDialog.ShowDialog() == false) return;
-            var outputFolder = folderBrowserDialog.SelectedPath;
+            if (folderBrowserDialog.ShowDialog() == true)
+            {
+                OutputFolder = folderBrowserDialog.SelectedPath;
+            }
+        }
+
+        public void AddFile()
+        {
+            if (string.IsNullOrEmpty(OutputFolder))
+            {
+                SelectOutputFolder();
+                if (string.IsNullOrEmpty(OutputFolder))
+                {
+                    return;
+                }
+            }
+            
+            // 选择原文件
+            var openFileDialog = new OpenFileDialog {Filter = "所有文件 (*.*)|*.*", Multiselect = true};
+            if (openFileDialog.ShowDialog() == false) return;
+            var dialogFilePaths = openFileDialog.FileNames;
 
             foreach (var filePath in dialogFilePaths)
             {
                 if (Files.All(f => f.Path != filePath))
                 {
                     var fileName = Path.GetFileName(filePath);
-                    var file = new File(fileName, filePath) {OutputFolder = outputFolder};
+                    var file = new File(fileName, filePath) {OutputFolder = this.OutputFolder};
                     Files.Add(file);
                 }
             }

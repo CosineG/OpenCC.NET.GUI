@@ -19,22 +19,72 @@
                     <RowDefinition Height="1*" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <TextBox
-                    Margin="12"
-                    Background="#FFFFFFFF"
-                    ui:ControlHelper.Header="原始文本"
-                    ui:ControlHelper.PlaceholderText="请输入文本"
-                    AcceptsReturn="True"
-                    TextWrapping="Wrap"
-                    Text="{Binding OriginalText}" />
-                <TextBox
-                    Grid.Row="1"
-                    Margin="12"
-                    Background="#FFFFFFFF"
-                    ui:ControlHelper.Header="转换结果"
-                    AcceptsReturn="True"
-                    TextWrapping="Wrap"
-                    Text="{Binding ConvertedText, Mode=OneWay}" />
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="12,12,12,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="原始文本" VerticalAlignment="Center" FontSize="16"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button Command="{Binding PasteCommand}" ToolTip="粘贴" Margin="0,0,5,0">
+                                <ui:FontIcon Glyph="&#xE77F;"/>
+                            </Button>
+                            <Button Command="{Binding ClearCommand}" ToolTip="清除">
+                                <ui:FontIcon Glyph="&#xE74D;"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <TextBox
+                        Grid.Row="1"
+                        Margin="12,5,12,12"
+                        Background="#FFFFFFFF"
+                        ui:ControlHelper.PlaceholderText="请输入文本"
+                        AcceptsReturn="True"
+                        TextWrapping="Wrap"
+                        Text="{Binding OriginalText, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="12,12,12,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="转换结果"
+                            VerticalAlignment="Center"
+                            FontSize="16" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button Command="{Binding CopyConvertedCommand}" ToolTip="复制" Margin="0,0,5,0">
+                                <ui:FontIcon Glyph="&#xE8C8;"/>
+                            </Button>
+                            <Button Command="{Binding ClearConvertedCommand}" ToolTip="清除">
+                                <ui:FontIcon Glyph="&#xE74D;"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBox
+                        Grid.Row="1"
+                        Margin="12,5,12,12"
+                        Background="#FFFFFFFF"
+                        AcceptsReturn="True"
+                        TextWrapping="Wrap"
+                        Text="{Binding ConvertedText, Mode=OneWay}"
+                        IsReadOnly="True" />
+                </Grid>
             </Grid>
         </GroupBox>
     </Grid>
