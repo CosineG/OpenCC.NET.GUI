@@ -4,20 +4,24 @@
 
 ## 介绍
 
-OpenCC.NET GUI是基于OpenCC(Open Chinese Convert, 开放中文转换)，使用[OpenCC.NET](https://github.com/CosineG/OpenCC.NET)实现的中文转换工具，支持中文简繁体之间词汇级别的转换，同时还支持地域间异体字以及词汇的转换。
+OpenCC.NET GUI 是基于 OpenCC (Open Chinese Convert, 开放中文转换)，使用 [OpenCC.NET](https://github.com/CosineG/OpenCC.NET) 实现的中文转换工具，支持中文简繁体之间词汇级别的转换，同时还支持地域间异体字以及词汇的转换。
 
-### 特点
+## 功能
 
-- 支持简=>繁，繁=>简，繁=>繁的转换模式
-- 支持包括OpenCC，台湾，香港三种异体字标准
-- 支持中国大陆和台湾地区的常用词汇转换
-- 支持txt文本文件的批量转换
+- 支持文本和批量文件的简繁转换。
+- 文件格式：支持纯文本、Word (`.docx`)、Excel (`.xlsx`) 和 PowerPoint (`.pptx`)。暂不支持 PDF 格式。
+- 转换选项：
+  - 可自定义原文、目标格式（简/繁）。
+  - 支持 OpenCC、台湾、香港异体字标准。
+  - 支持大陆、台湾地区词汇转换。
+  - 可选“最大匹配”或“结巴分词”模式。
+
 
 ## 开始
 
 ### 获取
 
-可以直接在仓库页面右侧获取最新Release版本，或下载源码后自行编译。若无法运行，请确保安装了[.NET 6运行时](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-6.0.4-windows-x64-installer)。
+可以直接在仓库页面右侧获取最新Release版本，或下载源码后自行编译。若无法运行，请确保安装了 [.NET 8 运行时](https://dotnet.microsoft.com/zh-cn/download/dotnet/thank-you/runtime-desktop-8.0.22-windows-x64-installer)。
 
 ### 使用
 
@@ -31,7 +35,7 @@ OpenCC.NET GUI是基于OpenCC(Open Chinese Convert, 开放中文转换)，使用
 
 #### 文件批量转换
 
-此模式下可以批量导入txt格式的文本文件和docx格式的Word文档进行转换。若生成文件为乱码，请确保原文件为UTF-8编码。
+此模式下可以批量导入文件进行转换。当前支持纯文本和 `.docx`, `.pptx`, `.xlsx` 格式，未知格式将默认按照纯文本进行转换，暂不支持 PDF。
 
 ![](screenshot-2.png)
 
