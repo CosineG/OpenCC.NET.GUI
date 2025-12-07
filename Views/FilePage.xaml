@@ -113,14 +113,12 @@
                     Orientation="Horizontal">
                     <Button
                         ToolTip="添加文件"
-                        Background="#FFFFFFFF"
                         Margin="2"
                         Command="{Binding AddFileCommand}">
                         <ui:FontIcon Glyph="&#xE109;" />
                     </Button>
                     <Button
                         ToolTip="移除选中"
-                        Background="#FFFFFFFF"
                         Margin="2"
                         Command="{Binding RemoveFileCommand}"
                         CommandParameter="{Binding ElementName=DgFile,Path=SelectedItems}">
@@ -128,7 +126,6 @@
                     </Button>
                     <ui:DropDownButton
                         ToolTip="清除"
-                        Background="#FFFFFFFF"
                         Margin="2">
                         <ui:DropDownButton.Content>
                             <ui:FontIcon Glyph="&#xE894;" />

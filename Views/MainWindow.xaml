@@ -33,8 +33,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="300" />
                 </Grid.ColumnDefinitions>
-                <ui:Frame Background="#FFFFFFFF"
-                          x:Name="ContentFrame"
+                <ui:Frame x:Name="ContentFrame"
                           Margin="12" />
                 <views:OptionControl
                     Grid.Column="1"

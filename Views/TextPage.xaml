@@ -43,7 +43,6 @@
                     <TextBox
                         Grid.Row="1"
                         Margin="12,5,12,12"
-                        Background="#FFFFFFFF"
                         ui:ControlHelper.PlaceholderText="请输入文本"
                         AcceptsReturn="True"
                         TextWrapping="Wrap"
@@ -79,7 +78,6 @@
                     <TextBox
                         Grid.Row="1"
                         Margin="12,5,12,12"
-                        Background="#FFFFFFFF"
                         AcceptsReturn="True"
                         TextWrapping="Wrap"
                         Text="{Binding ConvertedText, Mode=OneWay}"
